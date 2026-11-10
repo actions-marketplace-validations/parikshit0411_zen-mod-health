@@ -1,5 +1,10 @@
 # zen-mod-health
 
+[![CI](https://github.com/parikshit0411/zen-mod-health/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/parikshit0411/zen-mod-health/actions/workflows/ci.yml)
+[![Store mods healthy](https://parikshit0411.github.io/zen-mod-health/badge.svg)](https://parikshit0411.github.io/zen-mod-health/)
+
+**[📊 Live dashboard](https://parikshit0411.github.io/zen-mod-health/)**: every mod in the Zen theme store, checked daily against the latest Zen release.
+
 **Finds [Zen Browser](https://zen-browser.app) mods broken by browser updates, and suggests the fix.**
 
 Zen mods are CSS that restyles the browser's own interface. When Zen or Firefox renames an element
