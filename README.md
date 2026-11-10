@@ -148,3 +148,7 @@ npm run build                    # compile to dist/
 - Check repos as well as the store copy, and flag store copies that drifted from source
 - Diff mode: "what did Zen version X → Y break?"
 - Check attribute names and preference names used in `-moz-pref()` queries
+
+## License
+
+[MIT](LICENSE)

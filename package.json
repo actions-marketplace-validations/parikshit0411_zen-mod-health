@@ -16,8 +16,8 @@
     "css",
     "linter"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Parikshit Sharma (https://github.com/parikshit0411)",
+  "license": "MIT",
   "description": "Finds Zen Browser mods broken by browser updates",
   "dependencies": {
     "fflate": "^0.8.3",
