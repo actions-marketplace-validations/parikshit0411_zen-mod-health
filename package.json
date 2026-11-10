@@ -43,6 +43,11 @@
     "dist"
   ],
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/parikshit0411/zen-mod-health.git"
+  },
+  "homepage": "https://parikshit0411.github.io/zen-mod-health/",
+  "bugs": {
+    "url": "https://github.com/parikshit0411/zen-mod-health/issues"
   }
 }

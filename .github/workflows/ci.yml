@@ -5,7 +5,7 @@ on:
     - cron: "0 6 * * *"   # daily: picks up new Zen releases and mod updates
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 
 permissions:
@@ -67,13 +67,13 @@ jobs:
         run: npm run store -- --zen-version latest --out site
       - run: cat site/REPORT.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-pages-artifact@v3
-        if: github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request'
         with:
           path: site
 
   deploy-pages:
     needs: store-report
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pages: write

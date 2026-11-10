@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: <owner>/zen-mod-health@v1
+      - uses: parikshit0411/zen-mod-health@v1
         with:
           path: chrome.css        # file(s) or folder(s), space-separated
           fail-on: degraded       # none | broken | degraded
@@ -77,7 +77,7 @@ Every mod gets a badge at `badges/<mod-id>.svg`. The dashboard shows the Markdow
 mod's README:
 
 ```md
-[![zen mod health](https://<owner>.github.io/zen-mod-health/badges/<mod-id>.svg)](https://<owner>.github.io/zen-mod-health/#<mod-id>)
+[![zen mod health](https://parikshit0411.github.io/zen-mod-health/badges/<mod-id>.svg)](https://parikshit0411.github.io/zen-mod-health/#<mod-id>)
 ```
 
 ## Results

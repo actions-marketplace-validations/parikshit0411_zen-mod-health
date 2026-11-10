@@ -1,6 +1,6 @@
 name: Zen Mod Health
 description: Check a Zen Browser mod against the latest Zen release and flag CSS that targets UI that no longer exists.
-author: zen-mod-health
+author: parikshit0411
 branding:
   icon: check-circle
   color: orange
