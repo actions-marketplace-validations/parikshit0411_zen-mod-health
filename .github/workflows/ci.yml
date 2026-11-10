@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # daily: picks up new Zen releases and mod updates
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  ZEN_MOD_HEALTH_CACHE: ${{ github.workspace }}/.zen-cache
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  # Runs the action exactly as a mod author would use it, against known fixtures.
+  action-self-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Healthy fixture passes
+        uses: ./
+        with:
+          path: test/fixtures/healthy-mod
+      - name: Broken fixture is detected
+        id: broken
+        uses: ./
+        continue-on-error: true
+        with:
+          path: test/fixtures/broken-mod
+          badge: broken-badge.svg
+      - name: Assert broken fixture failed
+        run: |
+          test "${{ steps.broken.outputs.exit-code }}" = "1" || { echo "expected exit-code 1"; exit 1; }
+          test -s broken-badge.svg
+
+  # Checks every mod in the Zen theme store and publishes the dashboard.
+  store-report:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - uses: actions/cache@v4
+        with:
+          path: .zen-cache
+          key: zen-${{ github.run_id }}
+          restore-keys: zen-
+      - name: Check all store mods against the latest Zen
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: npm run store -- --zen-version latest --out site
+      - run: cat site/REPORT.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: site
+
+  deploy-pages:
+    needs: store-report
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

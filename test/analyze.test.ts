@@ -66,6 +66,14 @@ describe("analyzeCss", () => {
     expect(a.status).toBe("healthy");
   });
 
+  it("checks @-moz-document blocks that target chrome: URLs (the browser UI)", () => {
+    const a = analyzeCss(`@-moz-document url-prefix("chrome:") { #urlbar {} #gone {} }`, corpus);
+    expect(a.totalRules).toBe(2);
+    expect(a.deadRules).toHaveLength(1);
+    const b = analyzeCss(`@-moz-document url("chrome://browser/content/browser.xhtml") { #urlbar {} }`, corpus);
+    expect(b.totalRules).toBe(1);
+  });
+
   it("recovers from syntax errors like the browser does, and warns", () => {
     const a = analyzeCss(`#urlbar { color: red; // oops it broke\n margin: 0; }`, corpus);
     expect(a.status).not.toBe("error");

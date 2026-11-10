@@ -5,3 +5,4 @@ site/
 zen/
 zen.tar.xz
 .idea/
+dist/

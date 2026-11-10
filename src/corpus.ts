@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { unzipSync } from "fflate";
 
@@ -59,6 +59,28 @@ export function buildCorpus(zenDir: string): Corpus {
     }
   }
   return { version: readVersion(zenDir), tokens, files };
+}
+
+/**
+ * Like buildCorpus, but caches the token set on disk keyed by Zen version and
+ * archive sizes, so repeat runs skip the ~2 s unzip-and-scan.
+ */
+export function loadCorpus(zenDir: string, cacheDir: string): Corpus {
+  const version = readVersion(zenDir);
+  const fingerprint = findArchives(zenDir).map((p) => statSync(p).size).join("-");
+  const file = join(cacheDir, `corpus-${version}-${fingerprint}.json`);
+  if (existsSync(file)) {
+    try {
+      const cached = JSON.parse(readFileSync(file, "utf8")) as { files: number; tokens: string[] };
+      return { version, files: cached.files, tokens: new Set(cached.tokens) };
+    } catch {
+      // Corrupt cache: fall through and rebuild.
+    }
+  }
+  const corpus = buildCorpus(zenDir);
+  mkdirSync(cacheDir, { recursive: true });
+  writeFileSync(file, JSON.stringify({ files: corpus.files, tokens: [...corpus.tokens] }));
+  return corpus;
 }
 
 /** Build a corpus from in-memory strings (used by tests). */

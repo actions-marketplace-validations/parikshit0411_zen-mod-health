@@ -38,7 +38,6 @@ export interface Analysis {
 /** At-rules whose child "rules" are not chrome selectors. */
 const SKIP_AT_RULES = new Set([
   "keyframes", "-moz-keyframes", "-webkit-keyframes",
-  "-moz-document", "document", // targets web pages, not the browser UI
   "font-face", "font-feature-values", "page", "property", "counter-style",
 ]);
 
@@ -67,6 +66,16 @@ export function findLineComments(css: string): number[] {
     if (/(^|[;{}])\s*\/\//.test(line)) lines.push(i + 1);
   });
   return lines;
+}
+
+/**
+ * `@-moz-document` usually targets web pages (userContent), but
+ * `url-prefix("chrome:")` / `url("chrome://browser/…")` targets the browser UI itself.
+ */
+export function targetsWebContent(at: AtRule): boolean {
+  const name = at.name.toLowerCase();
+  if (name !== "-moz-document" && name !== "document") return false;
+  return !/chrome:/i.test(at.params);
 }
 
 function ancestorAtRules(node: Rule): AtRule[] {
@@ -158,7 +167,7 @@ export function analyzeCss(css: string, corpus: Corpus, suggester?: Suggester): 
 
   root.walkRules((rule) => {
     const ats = ancestorAtRules(rule);
-    if (ats.some((a) => SKIP_AT_RULES.has(a.name.toLowerCase()))) return;
+    if (ats.some((a) => SKIP_AT_RULES.has(a.name.toLowerCase()) || targetsWebContent(a))) return;
     totalRules++;
     const line = rule.source?.start?.line ?? 0;
 
@@ -187,7 +196,8 @@ export function analyzeCss(css: string, corpus: Corpus, suggester?: Suggester): 
 
   if (totalRules === 0) return { ...emptyAnalysis("empty"), warnings: [...warnings] };
 
-  const score = Math.round(100 * (1 - deadRules.length / totalRules));
+  // Never round a mod with dead rules up to 100.
+  const score = Math.min(deadRules.length ? 99 : 100, Math.round(100 * (1 - deadRules.length / totalRules)));
   const status: Analysis["status"] =
     deadRules.length === 0 ? "healthy" : score >= 50 ? "degraded" : "broken";
 

@@ -1,0 +1,5 @@
+/* Known-good fixture used by the action self-test. */
+@media (-moz-bool-pref: "zen.fixture.enabled") {
+  #urlbar, #tabbrowser-tabs .tab-label { opacity: 0.9 }
+}
+#theme-Fixture-healthy-mod[option="x"] #translations-button:not(.gone) { display: none }

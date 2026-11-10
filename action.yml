@@ -1,0 +1,64 @@
+name: Zen Mod Health
+description: Check a Zen Browser mod against the latest Zen release and flag CSS that targets UI that no longer exists.
+author: zen-mod-health
+branding:
+  icon: check-circle
+  color: orange
+
+inputs:
+  path:
+    description: Mod CSS file(s) or mod folder(s) containing chrome.css, space-separated.
+    default: chrome.css
+  zen-version:
+    description: Zen release to check against ("latest" or a tag such as "1.24.1b").
+    default: latest
+  fail-on:
+    description: "Fail the job at this level: none | broken | degraded."
+    default: degraded
+  badge:
+    description: Optional path to write an SVG health badge to.
+    default: ""
+
+outputs:
+  exit-code:
+    description: 0 if no problems at or above fail-on, 1 otherwise.
+    value: ${{ steps.check.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Cache Zen release
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/zen-mod-health-cache
+        key: zen-mod-health-${{ runner.os }}-${{ inputs.zen-version }}-${{ github.run_id }}
+        restore-keys: zen-mod-health-${{ runner.os }}-${{ inputs.zen-version }}-
+
+    - name: Build zen-mod-health
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm ci --no-audit --no-fund --loglevel=error && npm run build --silent
+
+    - name: Check mod
+      id: check
+      shell: bash
+      env:
+        ZEN_MOD_HEALTH_CACHE: ${{ runner.temp }}/zen-mod-health-cache
+        GITHUB_TOKEN: ${{ github.token }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_ZEN_VERSION: ${{ inputs.zen-version }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_BADGE: ${{ inputs.badge }}
+      run: |
+        args=(--zen-version "$INPUT_ZEN_VERSION" --fail-on "$INPUT_FAIL_ON")
+        [ -n "$INPUT_BADGE" ] && args+=(--badge "$INPUT_BADGE")
+        read -ra paths <<< "$INPUT_PATH"
+        set +e
+        node "$GITHUB_ACTION_PATH/dist/cli.js" "${paths[@]}" "${args[@]}"
+        code=$?
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit $code

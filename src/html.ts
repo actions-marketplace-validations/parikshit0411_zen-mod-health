@@ -46,6 +46,10 @@ export function toHtml(report: Report): string {
   .body ul { margin: 0; padding-left: 18px; }
   code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
   .fix { color: var(--ok); }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .badge-row input { flex: 1; min-width: 200px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: 12px ui-monospace, monospace; }
+  .mod:target { outline: 2px solid var(--accent); }
+  a { color: var(--accent); }
   .empty-state { color: var(--muted); padding: 24px; text-align: center; }
   @media (max-width: 560px) { .mod summary { grid-template-columns: 12px 1fr auto; } .meta { display: none; } .body { padding-left: 16px; } }
 </style>
@@ -54,6 +58,8 @@ export function toHtml(report: Report): string {
 <main>
   <h1>Zen Mod Health</h1>
   <p class="sub" id="sub"></p>
+  <p class="sub">Finds mods whose CSS targets interface elements that no longer exist in Zen. Each mod's
+  <code>chrome.css</code> is checked against the names in the latest Zen release.</p>
   <div class="tiles" id="tiles"></div>
   <div class="bar"><input type="search" id="q" placeholder="Search mods or selectors…" aria-label="Search"></div>
   <div id="list"></div>
@@ -91,20 +97,29 @@ function detail(a) {
   return h || "<p>No problems found.</p>";
 }
 
+function badgeRow(mod) {
+  const url = new URL("badges/" + mod.id + ".svg", location.href).href;
+  const md = "[![zen mod health](" + url + ")](" + location.href.split("#")[0] + "#" + mod.id + ")";
+  return '<div class="badge-row"><img src="badges/' + esc(mod.id) + '.svg" alt="health badge" height="20">' +
+    '<input readonly value="' + esc(md) + '" aria-label="Badge Markdown" onclick="this.select()"></div>';
+}
+
 function render() {
   tiles();
   const q = document.getElementById("q").value.trim().toLowerCase();
   const rows = R.results.filter(r => (!filter || r.analysis.status === filter) &&
     (!q || r.mod.name.toLowerCase().includes(q) || r.analysis.missing.some(m => m.name.toLowerCase().includes(q))));
   document.getElementById("list").innerHTML = rows.length ? rows.map(({ mod, analysis: a }) =>
-    '<details class="mod ' + a.status + '"><summary><span class="dot" title="' + LABEL[a.status] + '"></span>' +
+    '<details class="mod ' + a.status + '" id="' + esc(mod.id) + '"' + (location.hash === "#" + mod.id ? " open" : "") + '><summary><span class="dot" title="' + LABEL[a.status] + '"></span>' +
     '<span class="name">' + esc(mod.name) + '</span><span class="score">' + (a.status === "error" ? "—" : a.score) + '</span>' +
     '<span class="meta">updated ' + esc((mod.updatedAt || "?").slice(0, 10)) + '</span></summary>' +
-    '<div class="body">' + detail(a) + (a.totalRules ? '<p class="meta">' + a.totalRules + ' rules checked · <a href="' + esc(mod.style) + '">chrome.css</a></p>' : "") +
+    '<div class="body">' + detail(a) + '<p class="meta">' + a.totalRules + ' rules checked · <a href="' + esc(mod.style) + '">chrome.css</a>' +
+    (mod.homepage ? ' · <a href="' + esc(mod.homepage) + '">homepage</a>' : "") + ' · <a href="#' + esc(mod.id) + '">link</a></p>' + badgeRow(mod) +
     '</div></details>').join("") : '<p class="empty-state">No mods match.</p>';
 }
 document.getElementById("q").oninput = render;
 render();
+if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
 </script>
 </body>
 </html>

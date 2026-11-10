@@ -4,7 +4,10 @@
   "scripts": {
     "test": "vitest run",
     "check": "tsx src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "store": "tsx src/cli.ts --store"
   },
   "keywords": [
     "zen-browser",
@@ -32,5 +35,14 @@
   "type": "module",
   "engines": {
     "node": ">=22"
+  },
+  "bin": {
+    "zen-mod-health": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git"
   }
 }
