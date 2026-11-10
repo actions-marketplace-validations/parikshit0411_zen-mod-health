@@ -55,6 +55,7 @@ Add this to your mod's repository as `.github/workflows/zen-mod-health.yml`:
 name: Zen mod health
 on:
   push:
+    branches: [main]      # your default branch; PR branches are covered below
   pull_request:
   schedule:
     - cron: "0 6 * * 1"   # weekly: catches breakage from new Zen releases
