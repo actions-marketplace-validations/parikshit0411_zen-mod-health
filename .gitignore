@@ -1,0 +1,7 @@
+node_modules/
+.cache/
+reports/
+site/
+zen/
+zen.tar.xz
+.idea/
